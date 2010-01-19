@@ -210,7 +210,7 @@ namespace clojure.lang.CljCompiler.Ast
         {
             string methodName = IsVariadic ? "doInvoke" : "invoke";
 
-            TypeBuilder tb = context.FnExpr.TypeBuilder;
+            TypeBuilder tb = context.ObjExpr.TypeBuilder;
 
             // TODO: Cache all the CreateObjectTypeArray values
             MethodBuilder mb = tb.DefineMethod(methodName, MethodAttributes.ReuseSlot | MethodAttributes.Public | MethodAttributes.Virtual, typeof(object), Compiler.CreateObjectTypeArray(NumParams));
@@ -225,7 +225,7 @@ namespace clojure.lang.CljCompiler.Ast
         MethodBuilder GenerateStaticMethod(GenContext context)
         {
             string methodName = GetStaticMethodName();
-            FnExpr fn = context.FnExpr;
+            ObjExpr fn = context.ObjExpr;
             TypeBuilder tb = fn.TypeBuilder;
 
             List<ParameterExpression> parms = new List<ParameterExpression>(_argLocals.count() + 1);
@@ -288,7 +288,7 @@ namespace clojure.lang.CljCompiler.Ast
             //ParameterExpression thisParm = Expression.Parameter(fn.BaseType, "this");
             //_thisBinding.ParamExpression = thisParm;
             //fn.ThisParam = thisParm;
-            FnExpr fn = context.FnExpr;
+            ObjExpr fn = context.ObjExpr;
             _thisBinding.ParamExpression = fn.ThisParam;
 
             try
