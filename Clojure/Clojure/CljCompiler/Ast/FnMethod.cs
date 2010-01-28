@@ -38,7 +38,7 @@ namespace clojure.lang.CljCompiler.Ast
 
         #region C-tors
 
-        public FnMethod(FnExpr fn, FnMethod parent)
+        public FnMethod(FnExpr fn, ObjMethod parent)
             :base(fn,parent)
         {
         }
@@ -58,12 +58,12 @@ namespace clojure.lang.CljCompiler.Ast
 
             try
             {
-                FnMethod method = new FnMethod(fn, (FnMethod)Compiler.METHODS.deref());
+                FnMethod method = new FnMethod(fn, (ObjMethod)Compiler.METHOD.deref());
                 //method._line = (int) Compiler.LINE.deref();
 
 
                 Var.pushThreadBindings(RT.map(
-                    Compiler.METHODS, method,
+                    Compiler.METHOD, method,
                     Compiler.LOCAL_ENV, Compiler.LOCAL_ENV.deref(),
                     Compiler.LOOP_LOCALS, null,
                     Compiler.NEXT_LOCAL_NUM, 0));
@@ -125,7 +125,5 @@ namespace clojure.lang.CljCompiler.Ast
         }
 
         #endregion
-
-
     }
 }
