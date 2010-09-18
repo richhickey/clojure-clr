@@ -343,7 +343,7 @@
      (.Write (getf :base) tws)
      (setf :trailing-white-space nil))))
 
-(defn- p-write-char [^TextWriter this ^Int32 c]
+(defn- p-write-char [^TextWriter this c]  ;; TODO: restore Int32 hint when prim is done  ^Int32 
   (if (= (getf :mode) :writing)
     (do 
       (write-white-space this)

@@ -93,7 +93,7 @@ Design notes for clojure.string:
                                                                      ;;;         (str buffer))))))
 
 (defn- replace-first-char
-  [^String s ^Char match replace]                                    ;;; Character
+  [^String s match replace]                                    ;;; TODO: Replace ^Char hint on Match -- prim redo;   Character
   (let [                                                          ;;; s (.toString s)
         i (.IndexOf s match)]                                 ;;; .indexOf (int match)
     (if (= -1 i)

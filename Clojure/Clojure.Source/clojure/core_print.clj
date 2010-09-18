@@ -245,7 +245,7 @@
     \formfeed "formfeed"
     \return "return"})
 
-(defmethod print-method Char [^Char c, ^System.IO.TextWriter w]
+(defmethod print-method Char [ c, ^System.IO.TextWriter w]  ;;; TODO: Restore: removed ^Char hint due to prim branch chages
   (if (or *print-dup* *print-readably*)
     (do (.Write w \\)
         (let [n (char-name-string c)]

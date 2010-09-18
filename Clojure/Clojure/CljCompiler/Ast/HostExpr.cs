@@ -443,7 +443,6 @@ namespace clojure.lang.CljCompiler.Ast
                 {
                     if (Util.equals(sym, Compiler.COMPILE_STUB_SYM.get()))
                         return (Type)Compiler.COMPILE_STUB_CLASS.get();
-                    // TODO:  This uses Java  [whatever  notation.  Figure out what to do here.
                     if (sym.Name.IndexOf('.') > 0 || sym.Name[sym.Name.Length-1] == ']')
                         t = RT.classForName(sym.Name);
                     else
@@ -451,6 +450,17 @@ namespace clojure.lang.CljCompiler.Ast
                         object o = Compiler.CurrentNamespace.GetMapping(sym);
                         if (o is Type)
                             t = (Type)o;
+                        else
+                        {
+                            try
+                            {
+                                t = RT.classForName(sym.Name);
+                            }
+                            catch (Exception)
+                            {
+                                // Java: aargh
+                            }
+                        }
                     }
 
                 }

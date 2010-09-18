@@ -1018,7 +1018,7 @@ Note this should only be used for the last one in the sequence"
   (proxy [System.IO.TextWriter] []                      ;;; java.io.Writer
     (Close [] (.Close writer))                          ;;; close
     (Flush [] (.Flush writer))                          ;;; flush
-    (Write ([^chars cbuf ^Int32 off ^Int32 len]     ;;;  write Integer
+    (Write ([cbuf off len]                                                    ;;; TODO: Restore type hints due to prim update: [^chars cbuf ^Int32 off ^Int32 len]     ;;;  write Integer
               (.Write writer cbuf off len))         ;;; write             
            ([x]
               (condp = (class x)
@@ -1036,7 +1036,7 @@ Note this should only be used for the last one in the sequence"
   (proxy [System.IO.TextWriter] []                                   ;;; java.io.Writer
     (Close [] (.Close writer))
     (Flush [] (.Flush writer))
-    (Write ([^chars cbuf ^Int32 off ^Int32 len] 
+    (Write ([cbuf off len]                                                    ;;; TODO: Restore type hints due to prim update: [^chars cbuf ^Int32 off ^Int32 len]
               (.Write writer cbuf off len))
            ([x]
               (condp = (class x)
@@ -1080,7 +1080,7 @@ Note this should only be used for the last one in the sequence"
       (Close [] (.Close writer))
       (Flush [] (.Flush writer))
       (Write 
-       ([^chars cbuf ^Int32 off ^Int32 len] 
+       ([cbuf off len]                                                    ;;; TODO: Restore type hints due to prim update: [^chars cbuf ^Int32 off ^Int32 len][^chars cbuf ^Int32 off ^Int32 len] 
           (.Write writer cbuf off len))
        ([x]
           (condp = (class x)
@@ -1106,7 +1106,7 @@ Note this should only be used for the last one in the sequence"
     (proxy [System.IO.TextWriter] []
       (Close [] (.Close writer))
       (Flush [] (.Flush writer))
-      (Write ([^chars cbuf ^Int32 off ^Int32 len] 
+      (Write ([cbuf off len]                                                    ;;; TODO: Restore type hints due to prim update: [^chars cbuf ^Int32 off ^Int32 len][^chars cbuf ^Int32 off ^Int32 len] 
                 (.Write writer cbuf off len))               
              ([x]
                 (condp = (class x)

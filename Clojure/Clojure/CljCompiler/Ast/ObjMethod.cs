@@ -99,8 +99,9 @@ namespace clojure.lang.CljCompiler.Ast
         internal abstract int RequiredArity { get; }
         internal abstract string MethodName { get; }
         protected abstract string StaticMethodName { get; }
-        protected abstract Type ReturnType { get; }
+        protected abstract Type ReturnType { get; set; }
         protected abstract Type[] ArgTypes { get; }
+        protected abstract Type[] RawArgTypes { get; }
 
         #endregion
 
@@ -145,7 +146,7 @@ namespace clojure.lang.CljCompiler.Ast
 
                 Var.pushThreadBindings(RT.map(Compiler.LOOP_LABEL, loopLabel, Compiler.METHOD, this));
 
-                Type[] argTypes = ArgTypes;
+                Type[] argTypes = RawArgTypes ?? ArgTypes;
 
                 for (int i = 0; i < _argLocals.count(); i++)
                 {
@@ -201,10 +202,16 @@ namespace clojure.lang.CljCompiler.Ast
                 }
             }
 
+            Type[] argTypes = ArgTypes;
+
             ILGen gen = new ILGen(mb.GetILGenerator());
-            gen.EmitLoadArg(0);                             
+            gen.EmitLoadArg(0);
             for (int i = 1; i <= _argLocals.count(); i++)
-                gen.EmitLoadArg(i);                         
+            {
+                gen.EmitLoadArg(i);
+                if (argTypes != null )
+                    gen.EmitExplicitCast(typeof(Object), argTypes[i - 1]);
+            }
             gen.EmitCall(staticMethodInfo);                 
             gen.Emit(OpCodes.Ret);
 

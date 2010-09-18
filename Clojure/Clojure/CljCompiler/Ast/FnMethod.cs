@@ -34,19 +34,54 @@ namespace clojure.lang.CljCompiler.Ast
         
         protected IPersistentVector _reqParms = PersistentVector.EMPTY;  // localbinding => localbinding
         protected LocalBinding _restParm = null;
+        Type[] _argTypes;
+        Type _retType;
+
+
+        protected override Type[] RawArgTypes
+        {
+            get { return _argTypes; }
+        }
+
+
+        protected override Type[] ArgTypes
+        {
+            get
+            {
+                if (IsVariadic && _reqParms.count() == Compiler.MAX_POSITIONAL_ARITY)
+                {
+                    Type[] ret = new Type[Compiler.MAX_POSITIONAL_ARITY + 1];
+                    for (int i = 0; i < Compiler.MAX_POSITIONAL_ARITY + 1; i++)
+                        ret[i] = typeof(Object);
+                    return ret;
+                }
+
+                return Compiler.CreateObjectTypeArray(NumParams);
+            }
+        }
+
+        protected override Type ReturnType
+        {
+            get { return Objx.IsStatic ? _retType : typeof(Object); }
+            set { _retType = value; }
+        }
+                //        method._retType = Compiler.TagType(Compiler.TagOf(name));
+                //method._argTypes = new Type[parms.count()];
+                //            method._argTypes[i] = pTypes[i];
+
 
         #endregion
 
         #region C-tors
 
-        public FnMethod(FnExpr fn, ObjMethod parent)
-            :base(fn,parent)
+        public FnMethod(FnExpr objx, ObjMethod parent)
+            :base(objx,parent)
         {
         }
 
         // For top-level compilation only
         public FnMethod(FnExpr fn, ObjMethod parent, BodyExpr body)
-            :base(fn,parent)
+            : base(fn, parent)
         {
             _body = body;
             _argLocals = PersistentVector.EMPTY;
@@ -82,27 +117,6 @@ namespace clojure.lang.CljCompiler.Ast
             get { return String.Format("__invokeHelper_{0}{1}", RequiredArity, IsVariadic ? "v" : string.Empty); }
         }
 
-        protected override Type[] ArgTypes
-        {
-            get 
-            {
-                if (IsVariadic && _reqParms.count() == Compiler.MAX_POSITIONAL_ARITY)
-                {
-                    Type[] ret = new Type[Compiler.MAX_POSITIONAL_ARITY + 1];
-                    for (int i = 0; i < Compiler.MAX_POSITIONAL_ARITY + 1; i++)
-                        ret[i] = typeof(Object);
-                    return ret;
-                }
-                
-                return Compiler.CreateObjectTypeArray(NumParams); 
-            }
-        }
-
-        protected override Type ReturnType
-        {
-            get { return typeof(object); }
-        }
-
         #endregion
 
         #region Parsing
@@ -119,6 +133,7 @@ namespace clojure.lang.CljCompiler.Ast
             try
             {
                 FnMethod method = new FnMethod(fn, (ObjMethod)Compiler.METHOD.deref());
+                method.ReturnType = Compiler.TagType(Compiler.TagOf(parms));
 
                 Var.pushThreadBindings(RT.map(
                     Compiler.METHOD, method,
@@ -127,10 +142,15 @@ namespace clojure.lang.CljCompiler.Ast
                     Compiler.NEXT_LOCAL_NUM, 0));
 
                 // register 'this' as local 0  
-                method._thisBinding = Compiler.RegisterLocal(Symbol.intern(fn.ThisName ?? "fn__" + RT.nextID()), null, null,false);
+                if (!isStatic)
+                {
+                    method._thisBinding = Compiler.RegisterLocal(Symbol.intern(fn.ThisName ?? "fn__" + RT.nextID()), null, null, false);
+                }
 
                 ParamParseState paramState = ParamParseState.Required;
                 IPersistentVector argLocals = PersistentVector.EMPTY;
+                List<Type> argTypes = new List<Type>();
+
                 int parmsCount = parms.count();
 
                 for (int i = 0; i < parmsCount; i++)
@@ -142,16 +162,25 @@ namespace clojure.lang.CljCompiler.Ast
                         throw new Exception("Can't use qualified name as parameter: " + p);
                     if (p.Equals(Compiler._AMP_))
                     {
-                        if (paramState == ParamParseState.Required)
+                        if (isStatic)
+                            throw new Exception("Variadic fns cannot be static");
+                        else if (paramState == ParamParseState.Required)
                             paramState = ParamParseState.Rest;
                         else
                             throw new Exception("Invalid parameter list");
                     }
                     else
                     {
-                        LocalBinding b = Compiler.RegisterLocal(p,
-                            paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
-                            null,true);
+                        Type pt = Compiler.TagType(Compiler.TagOf(p));
+                        if (pt.IsPrimitive && !isStatic)
+                            throw new Exception("Non-static fn can't have primitive parameter: " + p);
+                        argTypes.Add(pt);
+
+                        LocalBinding b = isStatic
+                            ? Compiler.RegisterLocal(p,null,new MethodParamExpr(pt), true)
+                            : Compiler.RegisterLocal(p,
+                                                     paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
+                                                     null,true);
 
                         argLocals = argLocals.cons(b);
                         switch (paramState)
@@ -173,6 +202,8 @@ namespace clojure.lang.CljCompiler.Ast
                     throw new Exception(string.Format("Can't specify more than {0} parameters", Compiler.MAX_POSITIONAL_ARITY));
                 Compiler.LOOP_LOCALS.set(argLocals);
                 method._argLocals = argLocals;
+                if (isStatic)
+                    method._argTypes = argTypes.ToArray();
                 method._body = (new BodyExpr.Parser()).Parse(new ParserContext(RHC.Return),body);
                 return method;
             }
@@ -183,6 +214,8 @@ namespace clojure.lang.CljCompiler.Ast
         }
 
         #endregion
+
+        
 
         #region Immediate mode compilation
 

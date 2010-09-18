@@ -188,7 +188,7 @@ namespace clojure.lang.CljCompiler.Ast
             set { _varCallsites = value; }
         }
 
-        protected bool IsStatic
+        public bool IsStatic
         {
             get { return _isStatic; }
             set { _isStatic = value; }
@@ -252,7 +252,6 @@ namespace clojure.lang.CljCompiler.Ast
         }
 
         protected bool OnceOnly { get { return _onceOnly; } }
-
 
         #endregion
 
@@ -1104,13 +1103,27 @@ namespace clojure.lang.CljCompiler.Ast
 
         internal Expression GenLocal(GenContext context, LocalBinding lb)
         {
-            if (_closes.containsKey(lb) && _fnMode == FnMode.Full )
+            if (_fnMode == FnMode.Full)
             {
-                Expression expr = Expression.Field(_thisParam, lb.Name);
-                Type primtType = lb.PrimitiveType;
-                if (primtType != null)
-                    expr = Compiler.MaybeBox(Expression.Convert(expr, primtType));
-                return expr;
+                if (_closes.containsKey(lb))
+                {
+                    Expression expr = Expression.Field(_thisParam, lb.Name);
+                    Type primtType = lb.PrimitiveType;
+                    if (primtType != null)
+                        expr = Compiler.MaybeBox(Expression.Convert(expr, primtType));
+                    return expr;
+                }
+                //else
+                //{
+                //    int argoff = _isStatic ? 0 : 1;
+                //    Type primtType = lb.PrimitiveType;
+                //    if (lb.IsArg)
+                //    {
+                //        // not sure what to put here.
+                //    }
+                //}
+                else
+                    return lb.ParamExpression;
             }
             else
             {

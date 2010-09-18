@@ -44,7 +44,7 @@
 (defn- get-writer [this]
   (get-field this :base))
 
-(defn- c-write-char [^TextWriter this ^Int32 c]
+(defn- c-write-char [^TextWriter this  c]  ;;; TODO: Resotre Int32 hint
   (dosync (if (= c (int \newline))
 	    (do
               (set-field this :cur 0)
@@ -67,7 +67,7 @@
        (proxy [TextWriter IDeref] []
          (deref [] fields)
          (Write
-          ([^chars cbuf ^Int32 off ^Int32 len] 
+          ([cbuf off len]                                                  ;;; TODO: REstore this as part of prim rewrite [^chars cbuf ^Int32 off ^Int32 len] 
              (let [^TextWriter writer (get-field this :base)] 
                (.Write writer cbuf off len)))               
           ([x]

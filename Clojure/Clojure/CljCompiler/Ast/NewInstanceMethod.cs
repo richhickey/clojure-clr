@@ -73,9 +73,15 @@ namespace clojure.lang.CljCompiler.Ast
             get { return _argTypes; }
         }
 
+        protected override Type[] RawArgTypes
+        {
+            get { return _argTypes; }
+        }
+        
         protected override Type ReturnType
         {
             get { return _retType; }
+            set { _retType = value; }
         }
 
         #endregion
@@ -123,7 +129,7 @@ namespace clojure.lang.CljCompiler.Ast
             }
 
             IPersistentVector parms = (IPersistentVector)RT.second(form);
-            if (parms.count() == 0 || !(parms.nth(0) is Symbol))
+            if (parms.count() == 0 || !(parms.nth(0) is Symbol)) // JVM ve4rsion does not have the Symbol check
                 throw new ArgumentException("Must supply at least one argument for 'this' in: " + dotName);
 
             Symbol thisName = (Symbol)parms.nth(0);
