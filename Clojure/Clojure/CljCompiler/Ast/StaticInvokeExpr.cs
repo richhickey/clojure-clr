@@ -29,6 +29,7 @@ namespace clojure.lang.CljCompiler.Ast
     {
         #region Data
 
+        readonly string _typename;
         readonly Type _target;
         readonly Type _retType;
         readonly Type[] _paramTypes;
@@ -40,8 +41,9 @@ namespace clojure.lang.CljCompiler.Ast
 
         #region Ctors
 
-        public StaticInvokeExpr(Type target, Type retType, Type[] paramTypes, bool variadic, IPersistentVector args, Symbol tag)
+        public StaticInvokeExpr(string typename, Type target, Type retType, Type[] paramTypes, bool variadic, IPersistentVector args, Symbol tag)
         {
+            _typename = typename;
             _target = target;
             _retType = retType;
             _paramTypes = paramTypes;
@@ -77,7 +79,7 @@ namespace clojure.lang.CljCompiler.Ast
             IPersistentVector paramlist = null;
             int argcount = RT.count(args);
             bool variadic = false;
-            for (ISeq aseq = RT.seq(paramlists); aseq != null; aseq = aseq.next())
+            for (ISeq aseq = RT.seq(paramlists); paramlist == null && aseq != null; aseq = aseq.next())
             {
                 if (!(aseq.first() is IPersistentVector))
                     throw new InvalidOperationException("Expected vector arglist, had: " + aseq.first());
@@ -93,7 +95,7 @@ namespace clojure.lang.CljCompiler.Ast
                 else if (alist.count() == argcount)
                 {
                     paramlist = alist;
-                    variadic = false;
+                    //variadic = false;
                     break;
                 }
             }
@@ -129,7 +131,7 @@ namespace clojure.lang.CljCompiler.Ast
             for (ISeq s = RT.seq(args); s != null; s = s.next())
                 argv = argv.cons(Compiler.Analyze(new ParserContext(RHC.Expression), s.first()));
 
-            return new StaticInvokeExpr(target, retClass, paramTypes.ToArray(), variadic, argv, tag);
+            return new StaticInvokeExpr(cname, target, retClass, paramTypes.ToArray(), variadic, argv, tag);
         }
 
         #endregion
@@ -148,8 +150,10 @@ namespace clojure.lang.CljCompiler.Ast
         public Expression GenCode(RHC rhc, ObjExpr objx, GenContext context)
         {
             Expression unboxed = GenCodeUnboxed(rhc, objx, context);
-            Expression boxed = Compiler.MaybeBox(unboxed);
-            return boxed;
+            Expression e = unboxed;
+            if ( rhc != RHC.Statement )
+                e = Compiler.MaybeBox(e);
+            return e;
         }
 
         #endregion

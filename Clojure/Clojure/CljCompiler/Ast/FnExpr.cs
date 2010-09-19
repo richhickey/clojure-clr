@@ -130,7 +130,7 @@ namespace clojure.lang.CljCompiler.Ast
                 {
                     Symbol nm = (Symbol)RT.second(form);
                     fn._thisName = nm.Name;
-                    fn.IsStatic = RT.booleanCast(RT.get(nm.meta(), Compiler.STATIC_KEY));
+                    //fn.IsStatic = RT.booleanCast(RT.get(nm.meta(), Compiler.STATIC_KEY));
                     form = RT.cons(Compiler.FN, RT.next(RT.next(form)));
                 }
 
@@ -189,7 +189,7 @@ namespace clojure.lang.CljCompiler.Ast
 
             if (Compiler.IsCompiling)
             {
-                GenContext context = Compiler.COMPILER_CONTEXT.get() as GenContext ?? Compiler.EvalContext;
+                GenContext context = Compiler.COMPILER_CONTEXT.get() as GenContext;
                 GenContext genC = context.WithNewDynInitHelper(fn.InternalName + "__dynInitHelper_" + RT.nextID().ToString());
 
                 fn.Compile(fn.IsVariadic ? typeof(RestFn) : typeof(AFunction), PersistentVector.EMPTY, fn.OnceOnly, genC);
