@@ -357,8 +357,6 @@ namespace clojure.lang.CljCompiler.Ast
         {
             string baseClassName = _internalName + "__base" + (IsDefType || (IsStatic && Compiler.IsCompiling) ? "" : "__" + RT.nextID().ToString());
 
-            Console.WriteLine("Base: {0} / {1}", context.AssemblyBuilder.GetName().Name, baseClassName);
-
             Type[] interfaces = new Type[0];
 
             if (_keywordCallsites.count() > 0)
@@ -641,6 +639,8 @@ namespace clojure.lang.CljCompiler.Ast
         private void GenerateFnClass(IPersistentVector interfaces, GenContext context)
         {
             string publicTypeName = IsDefType || (IsStatic && Compiler.IsCompiling) ? _internalName : _internalName + "__" + RT.nextID();
+
+            Console.WriteLine("Def {0}", publicTypeName);
 
             _typeBuilder = context.AssemblyGen.DefinePublicType(publicTypeName, _baseType, true);
             for (int i = 0; i < interfaces.count(); i++)

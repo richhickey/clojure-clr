@@ -100,6 +100,7 @@ namespace clojure.lang.CljCompiler.Ast
         internal abstract string MethodName { get; }
         protected abstract string StaticMethodName { get; }
         protected abstract Type ReturnType { get; set; }
+        protected abstract Type RawReturnType { get; }
         protected abstract Type[] ArgTypes { get; }
         protected abstract Type[] RawArgTypes { get; }
 
@@ -129,6 +130,8 @@ namespace clojure.lang.CljCompiler.Ast
             string methodName = StaticMethodName;
             TypeBuilder tb = objx.TypeBuilder;
 
+            Console.WriteLine(" -- {0} {1}/{2}", methodName, _argLocals.count(), (RawArgTypes ?? ArgTypes).Length);
+
             List<ParameterExpression> parms = new List<ParameterExpression>(_argLocals.count() + 1);
 
             ParameterExpression thisParm = Expression.Parameter(objx.BaseType, "this");
@@ -146,7 +149,8 @@ namespace clojure.lang.CljCompiler.Ast
 
                 Var.pushThreadBindings(RT.map(Compiler.LOOP_LABEL, loopLabel, Compiler.METHOD, this));
 
-                Type[] argTypes = RawArgTypes ?? ArgTypes;
+                //Type[] argTypes = RawArgTypes ?? ArgTypes;
+                Type[] argTypes = ArgTypes;
 
                 for (int i = 0; i < _argLocals.count(); i++)
                 {
@@ -188,6 +192,9 @@ namespace clojure.lang.CljCompiler.Ast
 
             MethodBuilder mb = tb.DefineMethod(MethodName, MethodAttributes.ReuseSlot | MethodAttributes.Public | MethodAttributes.Virtual, ReturnType, ArgTypes);
 
+            Console.WriteLine(" -- {0} {1}/{2}, {3}", MethodName, _argLocals.count(), _parms == null ? 0 : _parms.count(), ReturnType.Name);
+
+
             GenInterface.SetCustomAttributes(mb, _methodMeta);
             if (_parms != null)
             {
@@ -202,15 +209,15 @@ namespace clojure.lang.CljCompiler.Ast
                 }
             }
 
-            Type[] argTypes = ArgTypes;
+            //Type[] argTypes = ArgTypes;
 
             ILGen gen = new ILGen(mb.GetILGenerator());
             gen.EmitLoadArg(0);
             for (int i = 1; i <= _argLocals.count(); i++)
             {
                 gen.EmitLoadArg(i);
-                if (argTypes != null )
-                    gen.EmitExplicitCast(typeof(Object), argTypes[i - 1]);
+                //if (argTypes != null )
+                //    gen.EmitExplicitCast(typeof(Object), argTypes[i - 1]);
             }
             gen.EmitCall(staticMethodInfo);                 
             gen.Emit(OpCodes.Ret);

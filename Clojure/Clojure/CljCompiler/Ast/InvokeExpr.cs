@@ -176,6 +176,9 @@ namespace clojure.lang.CljCompiler.Ast
 
         public Expression GenCode(RHC rhc, ObjExpr objx, GenContext context)
         {
+            if (_fexpr is VarExpr && ((VarExpr)_fexpr).Var.Symbol.Name.Contains("the-ns"))
+                Console.WriteLine("Found it");
+
             Expression basicFn = _fexpr.GenCode(RHC.Expression, objx, context);
             basicFn = Expression.Convert(basicFn, typeof(IFn));
 

@@ -60,9 +60,15 @@ namespace clojure.lang.CljCompiler.Ast
             }
         }
 
+
+        protected override Type RawReturnType
+        {
+            get { return _retType; }
+        }
+
         protected override Type ReturnType
         {
-            get { return Objx.IsStatic ? _retType : typeof(Object); }
+            get {  return Objx.IsStatic ? _retType : typeof(Object); }
             set { _retType = value; }
         }
                 //        method._retType = Compiler.TagType(Compiler.TagOf(name));
@@ -125,6 +131,8 @@ namespace clojure.lang.CljCompiler.Ast
 
         internal static FnMethod Parse(FnExpr fn, ISeq form, bool isStatic)
         {
+            isStatic = false; // asdf
+
             // ([args] body ... )
 
             IPersistentVector parms = (IPersistentVector)RT.first(form);
@@ -176,11 +184,14 @@ namespace clojure.lang.CljCompiler.Ast
                             throw new Exception("Non-static fn can't have primitive parameter: " + p);
                         argTypes.Add(pt);
 
-                        LocalBinding b = isStatic
-                            ? Compiler.RegisterLocal(p,null,new MethodParamExpr(pt), true)
-                            : Compiler.RegisterLocal(p,
+                        //LocalBinding b = isStatic
+                        //    ? Compiler.RegisterLocal(p,null,new MethodParamExpr(pt), true)
+                        //    : Compiler.RegisterLocal(p,
+                        //                             paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
+                        //                             null,true);
+                        LocalBinding b = Compiler.RegisterLocal(p,
                                                      paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
-                                                     null,true);
+                                                     null, true);
 
                         argLocals = argLocals.cons(b);
                         switch (paramState)
@@ -202,8 +213,8 @@ namespace clojure.lang.CljCompiler.Ast
                     throw new Exception(string.Format("Can't specify more than {0} parameters", Compiler.MAX_POSITIONAL_ARITY));
                 Compiler.LOOP_LOCALS.set(argLocals);
                 method._argLocals = argLocals;
-                if (isStatic)
-                    method._argTypes = argTypes.ToArray();
+                //if (isStatic)
+                //    method._argTypes = argTypes.ToArray();
                 method._body = (new BodyExpr.Parser()).Parse(new ParserContext(RHC.Return),body);
                 return method;
             }

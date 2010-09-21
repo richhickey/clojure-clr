@@ -77,7 +77,12 @@ namespace clojure.lang.CljCompiler.Ast
         {
             get { return _argTypes; }
         }
-        
+
+        protected override Type RawReturnType
+        {
+            get { return _retType; }
+        }
+
         protected override Type ReturnType
         {
             get { return _retType; }
