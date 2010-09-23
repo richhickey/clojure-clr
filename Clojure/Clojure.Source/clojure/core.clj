@@ -3209,7 +3209,7 @@
   {:added "1.0"}
   [] (clojure.lang.Namespace/all))
 
-(defn ^:static  the-ns 
+(defn ^:static the-ns
   "If passed a namespace, returns it. Else, when passed a symbol,
   returns the namespace named by it, throwing an exception if not
   found."

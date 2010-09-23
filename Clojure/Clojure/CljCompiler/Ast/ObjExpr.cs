@@ -640,8 +640,6 @@ namespace clojure.lang.CljCompiler.Ast
         {
             string publicTypeName = IsDefType || (IsStatic && Compiler.IsCompiling) ? _internalName : _internalName + "__" + RT.nextID();
 
-            Console.WriteLine("Def {0}", publicTypeName);
-
             _typeBuilder = context.AssemblyGen.DefinePublicType(publicTypeName, _baseType, true);
             for (int i = 0; i < interfaces.count(); i++)
                 _typeBuilder.AddInterfaceImplementation((Type)interfaces.nth(i));

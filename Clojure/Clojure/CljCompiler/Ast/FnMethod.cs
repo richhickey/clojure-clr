@@ -68,7 +68,8 @@ namespace clojure.lang.CljCompiler.Ast
 
         protected override Type ReturnType
         {
-            get {  return Objx.IsStatic ? _retType : typeof(Object); }
+            get { return typeof(Object); }
+            //get {  return Objx.IsStatic ? _retType : typeof(Object); }
             set { _retType = value; }
         }
                 //        method._retType = Compiler.TagType(Compiler.TagOf(name));

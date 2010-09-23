@@ -130,8 +130,6 @@ namespace clojure.lang.CljCompiler.Ast
             string methodName = StaticMethodName;
             TypeBuilder tb = objx.TypeBuilder;
 
-            Console.WriteLine(" -- {0} {1}/{2}", methodName, _argLocals.count(), (RawArgTypes ?? ArgTypes).Length);
-
             List<ParameterExpression> parms = new List<ParameterExpression>(_argLocals.count() + 1);
 
             ParameterExpression thisParm = Expression.Parameter(objx.BaseType, "this");
@@ -191,9 +189,6 @@ namespace clojure.lang.CljCompiler.Ast
             TypeBuilder tb = objx.TypeBuilder;
 
             MethodBuilder mb = tb.DefineMethod(MethodName, MethodAttributes.ReuseSlot | MethodAttributes.Public | MethodAttributes.Virtual, ReturnType, ArgTypes);
-
-            Console.WriteLine(" -- {0} {1}/{2}, {3}", MethodName, _argLocals.count(), _parms == null ? 0 : _parms.count(), ReturnType.Name);
-
 
             GenInterface.SetCustomAttributes(mb, _methodMeta);
             if (_parms != null)
