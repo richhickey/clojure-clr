@@ -104,6 +104,8 @@ namespace clojure.lang.CljCompiler.Ast
                     vm = (IPersistentMap)RT.assoc(vm, Compiler.STATIC_KEY, true);
                     // drop quote
                     vm = (IPersistentMap)RT.assoc(vm, Compiler.ARGLISTS_KEY, RT.second(mm.valAt(Compiler.ARGLISTS_KEY)));
+                    if (!Compiler.IsCompiling)
+                        mm = (IPersistentMap)RT.assoc(mm, Compiler.NOLINK_KEY, true);
                     v.setMeta(vm);
                 }
 

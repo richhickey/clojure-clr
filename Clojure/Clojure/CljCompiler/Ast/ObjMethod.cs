@@ -125,7 +125,7 @@ namespace clojure.lang.CljCompiler.Ast
         }
 
 
-        MethodBuilder GenerateStaticMethod(ObjExpr objx, GenContext context)
+        protected MethodBuilder GenerateStaticMethod(ObjExpr objx, GenContext context)
         {
             string methodName = StaticMethodName;
             TypeBuilder tb = objx.TypeBuilder;
@@ -170,7 +170,7 @@ namespace clojure.lang.CljCompiler.Ast
 
 
                 // TODO: Cache all the CreateObjectTypeArray values
-                MethodBuilder mb = tb.DefineMethod(methodName, MethodAttributes.Static, ReturnType, argTypes);
+                MethodBuilder mb = tb.DefineMethod(methodName, MethodAttributes.Static|MethodAttributes.Public, ReturnType, argTypes);
 
                 lambda.CompileToMethod(mb, true);
                 return mb;
@@ -190,7 +190,7 @@ namespace clojure.lang.CljCompiler.Ast
 
             MethodBuilder mb = tb.DefineMethod(MethodName, MethodAttributes.ReuseSlot | MethodAttributes.Public | MethodAttributes.Virtual, ReturnType, ArgTypes);
 
-            GenInterface.SetCustomAttributes(mb, _methodMeta);
+           GenInterface.SetCustomAttributes(mb, _methodMeta);
             if (_parms != null)
             {
                 for (int i = 0; i < _parms.count(); i++)

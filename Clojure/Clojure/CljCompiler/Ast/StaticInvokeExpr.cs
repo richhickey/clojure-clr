@@ -167,7 +167,47 @@ namespace clojure.lang.CljCompiler.Ast
 
         public Expression GenCodeUnboxed(RHC rhc, ObjExpr objx, GenContext context)
         {
-            throw new NotImplementedException("TODO: Implement StaticInvodeExpr.GenCodeUnboxed");
+            Expression[] argExprs;
+            Type[] argTypes;
+            if (_variadic)
+            {
+                argExprs = new Expression[_paramTypes.Length + 1];
+                argTypes = new Type[_paramTypes.Length+1];
+                argExprs[0] = Expression.Constant(null,_target.BaseType);
+                argTypes[0] = _target.BaseType;
+
+                for (int i = 0; i < _paramTypes.Length - 1; i++)
+                {
+                    Expr e = (Expr)_args.nth(i);
+                    if (Compiler.MaybePrimitiveType(e) == _paramTypes[i])
+                        argExprs[i + 1] = ((MaybePrimitiveExpr)e).GenCodeUnboxed(RHC.Expression, objx, context);
+                    else
+                        argExprs[i + 1] = e.GenCode(RHC.Expression, objx, context);
+                    argTypes[i+1 ] = argExprs[i+1].Type;
+
+                }
+                IPersistentVector restArgs = RT.subvec(_args, _paramTypes.Length - 1, _args.count());
+                Expression expr = Compiler.GenArgArray(RHC.Expression, objx, context, restArgs);
+                argExprs[_paramTypes.Length] = Expression.Call(Compiler.Method_ArraySeq_create, expr);
+                argTypes[_paramTypes.Length] = typeof(ISeq);
+            }
+            else
+            {
+                Expression[] argExprs1 = MethodExpr.GenTypedArgs(objx, context, _paramTypes, _args);
+                argExprs = new Expression[_args.count() + 1];
+                argTypes = new Type[_paramTypes.Length+1];
+                argExprs[0] = Expression.Constant(null, _target.BaseType);
+                argTypes[0] = _target.BaseType;
+                for (int i = 0; i < _args.count(); i++)
+                {
+                    argExprs[i + 1] = argExprs1[i];
+                    argTypes[i + 1] = argExprs1[i].Type;
+                }
+            }
+
+
+            //return Expression.Call(_target.GetMethod("InvokeStatic",argTypes),argExprs);
+            return Utils.ComplexCallHelper(_target.GetMethod("InvokeStatic", argTypes), argExprs);
         }
 
         #endregion

@@ -68,14 +68,9 @@ namespace clojure.lang.CljCompiler.Ast
 
         protected override Type ReturnType
         {
-            get { return typeof(Object); }
-            //get {  return Objx.IsStatic ? _retType : typeof(Object); }
+            get {  return Objx.IsStatic  && Compiler.IsCompiling ? _retType : typeof(Object); }
             set { _retType = value; }
         }
-                //        method._retType = Compiler.TagType(Compiler.TagOf(name));
-                //method._argTypes = new Type[parms.count()];
-                //            method._argTypes[i] = pTypes[i];
-
 
         #endregion
 
@@ -121,7 +116,13 @@ namespace clojure.lang.CljCompiler.Ast
 
         protected override string StaticMethodName
         {
-            get { return String.Format("__invokeHelper_{0}{1}", RequiredArity, IsVariadic ? "v" : string.Empty); }
+            get
+            {
+                if (Objx.IsStatic && Compiler.IsCompiling)
+                    return "InvokeStatic";
+
+                return String.Format("__invokeHelper_{0}{1}", RequiredArity, IsVariadic ? "v" : string.Empty);
+            }
         }
 
         #endregion
@@ -142,13 +143,16 @@ namespace clojure.lang.CljCompiler.Ast
             try
             {
                 FnMethod method = new FnMethod(fn, (ObjMethod)Compiler.METHOD.deref());
-                method.ReturnType = Compiler.TagType(Compiler.TagOf(parms));
 
                 Var.pushThreadBindings(RT.map(
                     Compiler.METHOD, method,
                     Compiler.LOCAL_ENV, Compiler.LOCAL_ENV.deref(),
                     Compiler.LOOP_LOCALS, null,
                     Compiler.NEXT_LOCAL_NUM, 0));
+
+                method.ReturnType = Compiler.TagType(Compiler.TagOf(parms));
+                if (method.ReturnType.IsPrimitive && !(method.ReturnType == typeof(double) || method.ReturnType == typeof(long)))
+                    throw new ArgumentException("Only long and double primitives are supported");
 
                 // register 'this' as local 0  
                 //if (!isStatic)
@@ -171,9 +175,10 @@ namespace clojure.lang.CljCompiler.Ast
                         throw new Exception("Can't use qualified name as parameter: " + p);
                     if (p.Equals(Compiler._AMP_))
                     {
-                        if (isStatic)
-                            throw new Exception("Variadic fns cannot be static");
-                        else if (paramState == ParamParseState.Required)
+                        //if (isStatic)
+                        //    throw new Exception("Variadic fns cannot be static");
+                        //else 
+                        if (paramState == ParamParseState.Required)
                             paramState = ParamParseState.Rest;
                         else
                             throw new Exception("Invalid parameter list");
@@ -183,16 +188,20 @@ namespace clojure.lang.CljCompiler.Ast
                         Type pt = Compiler.TagType(Compiler.TagOf(p));
                         if (pt.IsPrimitive && !isStatic)
                             throw new Exception("Non-static fn can't have primitive parameter: " + p);
+                        if ( pt.IsPrimitive && !(pt == typeof(double) || pt == typeof(long)))
+                            throw new ArgumentException("Only long and double primities are supported: " + p);
+                        if ( paramState == ParamParseState.Rest && Compiler.TagOf(p) != null )
+                            throw new Exception("& arg cannot have type hint");
+                        if ( paramState == ParamParseState.Rest )
+                            pt = typeof(ISeq);
+
                         argTypes.Add(pt);
 
-                        //LocalBinding b = isStatic
-                        //    ? Compiler.RegisterLocal(p,null,new MethodParamExpr(pt), true)
-                        //    : Compiler.RegisterLocal(p,
-                        //                             paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
-                        //                             null,true);
-                        LocalBinding b = Compiler.RegisterLocal(p,
+                        LocalBinding b = isStatic
+                            ? Compiler.RegisterLocal(p,null,new MethodParamExpr(pt), true)
+                            : Compiler.RegisterLocal(p,
                                                      paramState == ParamParseState.Rest ? Compiler.ISEQ : Compiler.TagOf(p),
-                                                     null, true);
+                                                     null,true);
 
                         argLocals = argLocals.cons(b);
                         switch (paramState)
