@@ -79,7 +79,7 @@ namespace clojure.lang.CljCompiler.Ast
             IPersistentVector paramlist = null;
             int argcount = RT.count(args);
             bool variadic = false;
-            for (ISeq aseq = RT.seq(paramlists); paramlist == null && aseq != null; aseq = aseq.next())
+            for (ISeq aseq = RT.seq(paramlists); aseq != null; aseq = aseq.next())
             {
                 if (!(aseq.first() is IPersistentVector))
                     throw new InvalidOperationException("Expected vector arglist, had: " + aseq.first());
@@ -95,7 +95,7 @@ namespace clojure.lang.CljCompiler.Ast
                 else if (alist.count() == argcount)
                 {
                     paramlist = alist;
-                    //variadic = false;
+                    variadic = false;
                     break;
                 }
             }

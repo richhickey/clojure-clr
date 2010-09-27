@@ -133,8 +133,6 @@ namespace clojure.lang.CljCompiler.Ast
 
         internal static FnMethod Parse(FnExpr fn, ISeq form, bool isStatic)
         {
-            isStatic = false; // asdf
-
             // ([args] body ... )
 
             IPersistentVector parms = (IPersistentVector)RT.first(form);
@@ -155,10 +153,10 @@ namespace clojure.lang.CljCompiler.Ast
                     throw new ArgumentException("Only long and double primitives are supported");
 
                 // register 'this' as local 0  
-                //if (!isStatic)
-                //{
+                if (!isStatic)
+                {
                     method._thisBinding = Compiler.RegisterLocal(Symbol.intern(fn.ThisName ?? "fn__" + RT.nextID()), null, null, false);
-                //}
+                }
 
                 ParamParseState paramState = ParamParseState.Required;
                 IPersistentVector argLocals = PersistentVector.EMPTY;

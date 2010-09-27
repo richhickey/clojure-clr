@@ -1473,7 +1473,7 @@ namespace clojure.lang
             Expr ret = expr;
 
             if ( RT.meta(form) != null )
-                ret = new MetaExpr(ret, (MapExpr)MapExpr.Parse(pcon.EvEx(),((IObj)form).meta()));
+                ret = new MetaExpr(ret, MapExpr.Parse(pcon.EvEx(),((IObj)form).meta()));
 
             return ret;
         }

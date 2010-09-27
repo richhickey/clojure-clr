@@ -24,7 +24,7 @@ using System.Linq.Expressions;
 
 namespace clojure.lang.CljCompiler.Ast
 {
-    class KeywordExpr : Expr
+    class KeywordExpr : LiteralExpr
     {
         #region Data
 
@@ -33,8 +33,12 @@ namespace clojure.lang.CljCompiler.Ast
         public Keyword Kw
         {
             get { return _kw; }
-        } 
+        }
 
+        public override object Val
+        {
+            get { return _kw; }
+        }
 
         #endregion
 
@@ -49,12 +53,12 @@ namespace clojure.lang.CljCompiler.Ast
 
         #region Type mangling
 
-        public bool HasClrType
+        public override bool HasClrType
         {
             get { return true; }
         }
 
-        public Type ClrType
+        public override Type ClrType
         {
             get { return typeof(Keyword); }
         }
@@ -72,7 +76,7 @@ namespace clojure.lang.CljCompiler.Ast
 
         #region Code generation
 
-        public Expression GenCode(RHC rhc, ObjExpr objx, GenContext context)
+        public override Expression GenCode(RHC rhc, ObjExpr objx, GenContext context)
         {
             return objx.GenKeyword(context,_kw);
         }

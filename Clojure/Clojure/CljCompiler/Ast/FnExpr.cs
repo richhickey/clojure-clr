@@ -201,7 +201,7 @@ namespace clojure.lang.CljCompiler.Ast
             }
 
             if (origForm is IObj && ((IObj)origForm).meta() != null)
-                return new MetaExpr(fn, (MapExpr)MapExpr.Parse(pcon.EvEx(),((IObj)origForm).meta()));
+                return new MetaExpr(fn, MapExpr.Parse(pcon.EvEx(),((IObj)origForm).meta()));
             else
                 return fn;
         }
@@ -237,6 +237,19 @@ namespace clojure.lang.CljCompiler.Ast
 
             return GenImmediateCode(rhc, objx, context);
         }
+
+
+        //protected override void GenerateBaseClassMethods(TypeBuilder baseTB, GenContext context)
+        //{
+        //    if (IsStatic && Compiler.IsCompiling)
+
+        //        for (ISeq s = RT.seq(_methods); s != null; s = s.next())
+        //        {
+        //            FnMethod method = (FnMethod)s.first();
+        //            method.GenerateStaticInvocationMethod(this, baseTB, context);
+        //        }
+
+        //}
 
         protected override void GenerateMethods(GenContext context)
         {

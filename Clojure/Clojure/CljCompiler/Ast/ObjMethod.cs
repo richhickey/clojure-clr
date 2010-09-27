@@ -49,6 +49,8 @@ namespace clojure.lang.CljCompiler.Ast
 
         protected IPersistentVector _parms;
 
+        protected MethodBuilder _staticMethodBuilder;
+
         #endregion
 
         #region Data accessors
@@ -118,12 +120,76 @@ namespace clojure.lang.CljCompiler.Ast
 
         #region Code generation
 
+        /*
+         * 
+         * For regular FnMethods (dynamic link):
+         *   static method taking first argument of the base class type, named __invokeHelper2 or whatever
+         *   instance method calling static method, passing self as first arg
+         *   static and instance methods defined on the fn class type.
+         *   
+         * For statically-linked FnMethods
+         *   static method not taking a first argument of the base class type, named InvokeStatic
+         *   instance method calling static method, not passing self as first arg
+         *   static method defined on fn class base type
+         *   instance method defined on the fn class type
+         */
+
+        // TODO: Merge thid code with GenerateStaticMethod
+        //internal MethodBuilder GenerateStaticInvocationMethod(ObjExpr objx, TypeBuilder baseTB, GenContext context)
+        //{
+        //    string methodName = StaticMethodName;
+        //    TypeBuilder tb = baseTB;
+
+        //    List<ParameterExpression> parms = new List<ParameterExpression>(_argLocals.count());
+
+        //    try
+        //    {
+        //        LabelTarget loopLabel = Expression.Label("top");
+
+        //        Var.pushThreadBindings(RT.map(Compiler.LOOP_LABEL, loopLabel, Compiler.METHOD, this));
+
+        //        //Type[] argTypes = RawArgTypes ?? ArgTypes;
+        //        Type[] argTypes = ArgTypes;
+
+        //        for (int i = 0; i < _argLocals.count(); i++)
+        //        {
+        //            LocalBinding lb = (LocalBinding)_argLocals.nth(i);
+        //            ParameterExpression parm = Expression.Parameter(argTypes[i], lb.Name);
+        //            lb.ParamExpression = parm;
+        //            parms.Add(parm);
+        //        }
+
+        //        Expression body =
+        //            Expression.Block(
+        //                Expression.Label(loopLabel),
+        //                _body.GenCode(RHC.Return,objx,context));
+
+        //        Expression convBody = Compiler.MaybeConvert(body, ReturnType);
+
+        //        LambdaExpression lambda = Expression.Lambda(convBody, parms);
+        //        // JVM: Clears locals here.
+
+
+        //        // TODO: Cache all the CreateObjectTypeArray values
+        //        MethodBuilder mb = tb.DefineMethod(methodName, MethodAttributes.Static|MethodAttributes.Public, ReturnType, argTypes);
+
+        //        lambda.CompileToMethod(mb, true);
+
+        //        _staticMethodBuilder = mb;
+
+        //        return mb;
+        //    }
+        //    finally
+        //    {
+        //        Var.popThreadBindings();
+        //    }
+        //}
+
         internal void GenerateCode(ObjExpr objx, GenContext context)
         {
-            MethodBuilder mb = GenerateStaticMethod(objx, context);
-            GenerateMethod(mb, objx, context);
+            GenerateStaticMethod(objx, context);
+            GenerateMethod(objx, context);
         }
-
 
         protected MethodBuilder GenerateStaticMethod(ObjExpr objx, GenContext context)
         {
@@ -172,7 +238,14 @@ namespace clojure.lang.CljCompiler.Ast
                 // TODO: Cache all the CreateObjectTypeArray values
                 MethodBuilder mb = tb.DefineMethod(methodName, MethodAttributes.Static|MethodAttributes.Public, ReturnType, argTypes);
 
+                Console.Write("StMd: {0} {1}(", ReturnType.Name, methodName);
+                foreach (Type t in argTypes)
+                    Console.Write("{0}", t.Name);
+                Console.WriteLine(")");
+
                 lambda.CompileToMethod(mb, true);
+
+                _staticMethodBuilder = mb;
                 return mb;
             }
             finally
@@ -183,12 +256,16 @@ namespace clojure.lang.CljCompiler.Ast
         }
 
 
-        void GenerateMethod(MethodInfo staticMethodInfo, ObjExpr objx, GenContext context)
+        void GenerateMethod(ObjExpr objx, GenContext context)
         {
-
             TypeBuilder tb = objx.TypeBuilder;
 
             MethodBuilder mb = tb.DefineMethod(MethodName, MethodAttributes.ReuseSlot | MethodAttributes.Public | MethodAttributes.Virtual, ReturnType, ArgTypes);
+
+            Console.Write("InMd: {0} {1}(", ReturnType.Name, MethodName);
+            foreach (Type t in ArgTypes)
+                Console.Write("{0}", t.Name);
+            Console.WriteLine(")");
 
            GenInterface.SetCustomAttributes(mb, _methodMeta);
             if (_parms != null)
@@ -207,6 +284,8 @@ namespace clojure.lang.CljCompiler.Ast
             //Type[] argTypes = ArgTypes;
 
             ILGen gen = new ILGen(mb.GetILGenerator());
+            //if ( objx.IsStatic && Compiler.IsCompiling )
+            //    gen.EmitLoadArg(0);
             gen.EmitLoadArg(0);
             for (int i = 1; i <= _argLocals.count(); i++)
             {
@@ -214,7 +293,7 @@ namespace clojure.lang.CljCompiler.Ast
                 //if (argTypes != null )
                 //    gen.EmitExplicitCast(typeof(Object), argTypes[i - 1]);
             }
-            gen.EmitCall(staticMethodInfo);                 
+            gen.EmitCall(_staticMethodBuilder);                 
             gen.Emit(OpCodes.Ret);
 
             if ( IsExplicit )
