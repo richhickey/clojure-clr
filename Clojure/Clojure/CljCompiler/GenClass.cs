@@ -479,10 +479,20 @@ namespace clojure.lang
             ElseGenDelegate elseGen)
         {
             MethodAttributes attribs = MethodAttributes.Public;
-            if (isStatic)
-                attribs |= MethodAttributes.Static;
+            CallingConventions convens;
 
-            MethodBuilder mb = proxyTB.DefineMethod(sig.Name, MethodAttributes.Public| MethodAttributes.Virtual, CallingConventions.HasThis, sig.ReturnType, sig.ParamTypes);
+            if (isStatic)
+            {
+                attribs |= MethodAttributes.Static;
+                convens = CallingConventions.Standard;
+            }
+            else
+            {
+                attribs |= MethodAttributes.Virtual;
+                convens = CallingConventions.HasThis;
+            }
+
+            MethodBuilder mb = proxyTB.DefineMethod(sig.Name, attribs, convens, sig.ReturnType, sig.ParamTypes);
             ILGen gen = new ILGen(mb.GetILGenerator());
 
             Label foundLabel = gen.DefineLabel();
