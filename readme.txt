@@ -1,3 +1,22 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+ClojureCLR has a new home!
+
+Code repo:  https://github.com/clojure/clojure-clr
+JIRA: http://dev.clojure.org/jira/browse/CLJCLR
+
+Old binary distributions for versions 1.1 and 1.2 will continue 
+to be available here for the time being.
+
+The new github repo has 1.3 binaries. 
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 ClojureCLR
 
 This project is a native implementation of Clojure on the Common Language Runtime (CLR),
